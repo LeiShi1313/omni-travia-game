@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.25;
 
-import {XStakeController} from "src/XStaker.sol";
+import {TriviaHost} from "src/TriviaHost.sol";
 import {Script} from "forge-std/Script.sol";
 
-contract DeployXStakeController is Script {
+contract DeployTriviaHost is Script {
     function run(address owner, address portal) public {
         vm.startBroadcast();
-        new XStakeController(portal, owner);
+        new TriviaHost(portal, owner);
         vm.stopBroadcast();
     }
 }

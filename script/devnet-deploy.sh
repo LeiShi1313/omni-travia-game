@@ -12,6 +12,9 @@ deployer_pk=0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97
 owner=0xa0Ee7A142d267C1f36714E4a8F75612F20a79720
 owner_pk=0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 
+dev_account=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+dev_pk=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
 # Devnet info - portal address is same for all chains
 devnet=$(omni devnet info)
 portal=$(echo $devnet | jq -r '.[] | select(.chain_name == "omni_evm") | .portal_address')
@@ -50,33 +53,33 @@ deploy_token() {
   echo $token
 }
 
-# Deploy XStaker, return address
-deploy_xstaker() {
+# Deploy TriviaGuesser, return address
+deploy_guesser() {
   local rpc=$1
-  local controller=$2
+  local host=$2
   local token=$3
 
-  # deploy xstaker
-  local xstaker=$(getaddr $rpc)
+  # deploy guesser
+  local guesser=$(getaddr $rpc)
 
-  forge script DeployXStaker \
+  forge script DeployTriviaGuesser \
     --silent \
     --broadcast \
     --rpc-url $rpc \
     --private-key $deployer_pk \
-    --sig $(cast calldata "run(address,address,address)" $portal $controller $token)
+    --sig $(cast calldata "run(address,address,address)" $portal $host $token)
 
   if [ $? -ne 0 ]; then { exit 1; } fi
 
-  echo $xstaker
+  echo $guesser
 }
 
-# Deploy XStakeController, return address
-deploy_controller() {
+# Deploy TriviaHost, return address
+deploy_host() {
   local rpc=$1
-  local controller=$(getaddr $rpc)
+  local host=$(getaddr $rpc)
 
-  forge script DeployXStakeController \
+  forge script DeployTriviaHost \
     --silent \
     --broadcast \
     --rpc-url $rpc \
@@ -85,55 +88,75 @@ deploy_controller() {
 
   if [ $? -ne 0 ]; then { exit 1; } fi
 
-  echo $controller
+  echo $host
 }
 
-# Register XStaker with controller
-register_xstaker() {
+# Register guesser with host
+register_guesser() {
   local rpc=$1
-  local controller=$2
+  local host=$2
   local chain_id=$3
-  local xstaker=$4
+  local guesser=$4
 
-  forge script RegisterXStaker \
+  forge script RegisterTriviaGuesser \
     --broadcast \
     --rpc-url $rpc \
     --private-key $owner_pk \
-    --sig $(cast calldata "run(address,uint64,address)" $controller $chain_id $xstaker)
+    --sig $(cast calldata "run(address,uint64,address)" $host $chain_id $guesser)
 }
-
 
 # Deploy tokens
 op_token=$(deploy_token $op_rpc)
 arb_token=$(deploy_token $arb_rpc)
 
-# Deploy controller
-controller=$(deploy_controller $omni_rpc)
+# Deploy host
+host=$(deploy_host $omni_rpc)
 
-# Deploy xstakers
-op_xstaker=$(deploy_xstaker $op_rpc $controller $op_token)
-arb_xstaker=$(deploy_xstaker $arb_rpc $controller $arb_token)
+# Deploy guessers
+op_guesser=$(deploy_guesser $op_rpc $host $op_token)
+arb_guesser=$(deploy_guesser $arb_rpc $host $arb_token)
 
-# Register xstakers
-register_xstaker $omni_rpc $controller $(cast chain-id --rpc-url $op_rpc) $op_xstaker
-register_xstaker $omni_rpc $controller $(cast chain-id --rpc-url $arb_rpc) $arb_xstaker
+# Register guessers
+register_guesser $omni_rpc $host $(cast chain-id --rpc-url $op_rpc) $op_guesser
+register_guesser $omni_rpc $host $(cast chain-id --rpc-url $arb_rpc) $arb_guesser
 
 echo "Token(op): $op_token"
 echo "Token(arb): $arb_token"
-echo "XStaker(op): $op_xstaker"
-echo "XStaker(arb): $arb_xstaker"
-echo "XStakeController(omni): $controller"
+echo "Guesser(op): $op_guesser"
+echo "Guesser(arb): $arb_guesser"
+echo "Host(omni): $host"
 
-echo "
+if test "$SHELL" = "/usr/bin/fish" -o "$SHELL" = "/bin/fish"; then
+    echo "
+set -x OP_TOKEN $op_token
+set -x ARB_TOKEN $arb_token
+set -x OP_GUESSER $op_guesser
+set -x ARB_GUESSER $arb_guesser
+set -x HOST $host
+set -x OMNI_RPC $omni_rpc
+set -x OP_RPC $op_rpc
+set -x ARB_RPC $arb_rpc
+set -x OP_CHAINID $(cast chain-id --rpc-url $op_rpc)
+set -x ARB_CHAINID $(cast chain-id --rpc-url $arb_rpc)
+set -x OMNI_CHAINID $(cast chain-id --rpc-url $omni_rpc)
+set -x DEV_ACCOUNT $dev_account
+set -x DEV_PK $dev_pk
+" > deployments.fish
+
+else
+    echo "
 OP_TOKEN=$op_token
 ARB_TOKEN=$arb_token
-OP_XSTAKER=$op_xstaker
-ARB_XSTAKER=$arb_xstaker
-CONTROLLER=$controller
+OP_GUESSER=$op_guesser
+ARB_GUESSER=$arb_guesser
+HOST=$host
 OMNI_RPC=$omni_rpc
 OP_RPC=$op_rpc
 ARB_RPC=$arb_rpc
 OP_CHAINID=$(cast chain-id --rpc-url $op_rpc)
 ARB_CHAINID=$(cast chain-id --rpc-url $arb_rpc)
 OMNI_CHAINID=$(cast chain-id --rpc-url $omni_rpc)
+DEV_ACCOUNT=$dev_account
+DEV_PK=$dev_pk
 " > deployments.sh
+fi
