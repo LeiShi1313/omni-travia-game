@@ -37,10 +37,10 @@ add-question:
     --private-key $(OWNER_PK) \
     --sig $$(cast calldata "run(address,string,string)" $(HOST) "$(QUESTION)" "$(ANSWER)")
 
-get-question:
-	cast call $(HOST) "getQuestion(uint256)(string memory)" $(QUESTION_ID) \
+get-leaderboard:
+	cast call $(HOST) "getLeaderboard()(address[])" \
 		--rpc-url $(OMNI_RPC) \
-		--private-key $(OWNER_PK)
+		--private-key $(DEV_PK)
 
 get-player-question:
 	cast call $(HOST) "getPlayerQuestion(address)(string)" $(DEV_ACCOUNT) \

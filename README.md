@@ -1,39 +1,16 @@
-# XStake
+# Omni Travia Game
 
-Cross-chain staking, built with Omni.
-
-This repository is meant as an example. It demonstrates how to accept ERC20 deposits
-chains on multiple chains, and maintain global accounting on Omni.
-
-These contracts are unaudited, and should not be used in production.
+A Travia Game built on Omni, playable on any Omni-supported chain.
 
 ## How it works
 
 The protocol has two contracts
 
-- [`XStaker`](./src/XStaker.sol)
-- [`XStakeController`](./src/XStakeController.sol)
+- [`TraviaGuesser`](./src/TraviaGuesser.sol)
+- [`TraviaHost`](./src/TraviaHost.sol)
 
+The first accepts submitting answers. The second maintains global leaderboard, and tracks each player's progress.
 
-The first accepts deposits, and pays out withdrawals. The second maintains global accounting, and authorizes withdrawals. To learn how each contract works, read the source code. It's not long, and is commented generously. Read in the following order:
-
-
-1. [`XStaker.stake`](./src/XStaker.sol#L65)
-
-    Entrypoint for staking. This function accepts deposits, and records them with the `XStakeController` via `xcall`.
-
-
-2. [`XStakeController.recordStake`](./src/XStakeController.sol#L38)
-
-    Records stake. Only callable by a known `XStaker` contract on a supported chain.
-
-3. [`XStakeController.unstake`](./src/XStakeController.sol#L54)
-
-    Entrypoint for unstaking. This function authorizes withdrawals, and directs a payout to the corresponding `XStaker` via `xcall`.
-
-4. [`XStaker.withdraw`](./src/XStaker.sol#L103)
-
-    Withdraws stake back to the user. Only callable by the `XStakeController`.
 
 ## Testing
 
@@ -45,17 +22,29 @@ Run tests with
 make test
 ```
 
-
 ## Try it out
 
 To try out the contracts, you can deploy them to a local Omni devnet.
 
 ```bash
-make devnet-start
-make devnet-deploy
-```
+# Deploy testnet and contracts
+make all
+source deployments.sh
 
-This deploys an `XStakeController` to Omni's devnet EVM. Along with an
-`XStaker` to each mock rollup - mock arb and mock op. It also deploys an ERC20
-staking token to each rollup. This token has a public `mint()` method, so you
-can mint tokens to test with.
+# Mint some test token for the player
+make mint-op-token
+make approve-op-token
+
+# Add as many questions as you want
+OWNER_PK=0x... QUESTION="Question 1" ANSWER="Answer 1" make add-question
+
+# Player now can get the question
+make get-player-question
+# Submit an answer
+ANSWER="Answer 1" make get-answer-fee
+ANSWER="Answer 1" FEE=xxxx make submit-player-answer
+
+# Player can get the leaderboard or progress
+make get-leaderboard
+make get-player-progress
+```
