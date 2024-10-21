@@ -1,15 +1,16 @@
-# Omni Travia Game
+# Omni Trivia Game
 
-A Travia Game built on Omni, playable on any Omni-supported chain.
+A Trivia Game built on Omni, playable on any Omni-supported chain.
 
 ## How it works
 
 The protocol has two contracts
 
-- [`TraviaGuesser`](./src/TraviaGuesser.sol)
-- [`TraviaHost`](./src/TraviaHost.sol)
+- [`TriviaGuesser`](./src/TriviaGuesser.sol)
+- [`TriviaHost`](./src/TriviaHost.sol)
 
 The first accepts submitting answers. The second maintains global leaderboard, and tracks each player's progress.
+Once a player first submit an answer to a question, they are eligible for rewards, and can claim them by sending a `getReward` call to the `TriviaHost`.
 
 
 ## Testing
