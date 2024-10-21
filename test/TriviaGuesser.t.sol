@@ -73,4 +73,51 @@ contract TriviaGuesser_Test is Test {
         vm.deal(user, fee);
         guesser.submitAnswer{value: fee}(answerHash);
     }
+
+    /**
+     * @notice Test TriviaGuesser.sendReward
+     */
+    function test_sendReward() public {
+        address user = makeAddr("user");
+        uint256 amount = 10 ether;
+        uint64 omniChainId = portal.omniChainId();
+        token.mint(address(guesser), amount);
+
+        // only xcall
+        vm.expectRevert("TriviaGuesser: only xcall");
+        guesser.sendReward(user, amount);
+
+        // only omni
+        vm.expectRevert("TriviaGuesser: only omni");
+        portal.mockXCall({
+            sourceChainId: 1234, // not omni chain id
+            sender: address(host),
+            to: address(guesser),
+            data: abi.encodeCall(TriviaGuesser.sendReward, (user, amount)),
+            gasLimit: GasLimits.SendReward
+        });
+
+        // only controller
+        vm.expectRevert("TriviaGuesser: only host");
+        portal.mockXCall({
+            sourceChainId: omniChainId,
+            sender: address(1234), // not controller
+            to: address(guesser),
+            data: abi.encodeCall(TriviaGuesser.sendReward, (user, amount)),
+            gasLimit: GasLimits.SendReward
+        });
+
+        // withdraw
+        portal.mockXCall({
+            sourceChainId: portal.omniChainId(),
+            sender: address(host),
+            to: address(guesser),
+            data: abi.encodeCall(TriviaGuesser.sendReward, (user, amount)),
+            gasLimit: GasLimits.SendReward
+        });
+
+        // assert balances
+        assertEq(token.balanceOf(address(guesser)), 0);
+        assertEq(token.balanceOf(user), amount);
+    }
 }

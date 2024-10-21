@@ -12,8 +12,8 @@ deployer_pk=0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97
 owner=0xa0Ee7A142d267C1f36714E4a8F75612F20a79720
 owner_pk=0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6
 
-dev_account=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-dev_pk=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+player_account=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+player_pk=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
 # Devnet info - portal address is same for all chains
 devnet=$(omni devnet info)
@@ -141,8 +141,12 @@ set -x ARB_RPC $arb_rpc
 set -x OP_CHAINID $(cast chain-id --rpc-url $op_rpc)
 set -x ARB_CHAINID $(cast chain-id --rpc-url $arb_rpc)
 set -x OMNI_CHAINID $(cast chain-id --rpc-url $omni_rpc)
-set -x DEV_ACCOUNT $dev_account
-set -x DEV_PK $dev_pk
+set -x OWNER_ACCOUNT $owner
+set -x OWNER_PK $owner_pk
+set -x DEV_ACCOUNT $deployer
+set -x DEV_PK $deployer_pk
+set -x PLAYER_ACCOUNT $player_account
+set -x PLAYER_PK $player_pk
 " > deployments.fish
 
 else
@@ -159,7 +163,11 @@ ARB_RPC=$arb_rpc
 OP_CHAINID=$(cast chain-id --rpc-url $op_rpc)
 ARB_CHAINID=$(cast chain-id --rpc-url $arb_rpc)
 OMNI_CHAINID=$(cast chain-id --rpc-url $omni_rpc)
-DEV_ACCOUNT=$dev_account
-DEV_PK=$dev_pk
+OWNER_ACCOUNT=$owner
+OWNER_PK=$owner_pk
+DEV_ACCOUNT=$deployer
+DEV_PK=$deployer_pk
+PLAYER_ACCOUNT=$player_account
+PLAYER_PK=$player_pk
 " > deployments.sh
 fi

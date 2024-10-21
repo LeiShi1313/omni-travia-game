@@ -15,4 +15,7 @@ library GasLimits {
 
     /// @notice TriviaGuesser.getPlayerProgress xcall gas limit.
     uint64 internal constant GetPlayerProgress = 5_000_000;
+
+    /// @notice TriviaHost.getReward xcall gas limit.
+    uint64 internal constant SendReward = 5_000_000;
 }

@@ -18,6 +18,7 @@ contract TriviaHost is XApp, Ownable {
     struct Question {
         string question;
         bytes32 answerHash;
+        uint256 reward;
     }
 
     /// @notice Questions in the trivia game.
@@ -31,6 +32,9 @@ contract TriviaHost is XApp, Ownable {
 
     /// @notice Player progress.
     mapping(address => uint256) private playerProgress;
+
+    /// @notice Player reward.
+    mapping(address => uint256) private playerReward;
 
     /// @notice Address of trivia guesser each chain.
     mapping(uint256 => address) public triviaGusserOn;
@@ -48,8 +52,8 @@ contract TriviaHost is XApp, Ownable {
      * @param question Question to add.
      * @param answerHash Hash of the correct answer.
      */
-    function addQuestion(string memory question, bytes32 answerHash) external onlyOwner {
-        questions.push(Question({question: question, answerHash: answerHash}));
+    function addQuestion(string memory question, bytes32 answerHash, uint256 reward_) external onlyOwner {
+        questions.push(Question({question: question, answerHash: answerHash, reward: reward_}));
         emit QuestionAdded(questions.length - 1, question);
     }
 
@@ -67,6 +71,10 @@ contract TriviaHost is XApp, Ownable {
 
     function getPlayerProgress(address player) external view returns (uint256) {
         return playerProgress[player];
+    }
+
+    function getPlayerReward(address player) external view returns (uint256) {
+        return playerReward[player];
     }
 
     /**
@@ -93,6 +101,7 @@ contract TriviaHost is XApp, Ownable {
             }
             if (playerProgress[player] > leaderboard.length) {
                 leaderboard.push(player);
+                playerReward[player] += question.reward;
                 emit QuestionAnswered(player, playerQuestionId);
             }
         }
@@ -103,6 +112,35 @@ contract TriviaHost is XApp, Ownable {
      */
     function getLeaderboard() external view returns (address[] memory) {
         return leaderboard;
+    }
+
+    /**
+     * @notice Get the reward for a player.
+     */
+    function reward(uint64 onChainID) external payable {
+        uint256 reward_ = playerReward[msg.sender];
+        require(reward_ > 0, "TriviaHost: no reward");
+
+        playerReward[msg.sender] = 0;
+        uint256 fee = xcall({
+            destChainId: onChainID,
+            to: triviaGusserOn[onChainID],
+            data: abi.encodeCall(TriviaGuesser.sendReward, (msg.sender, reward_)),
+            gasLimit: GasLimits.SendReward
+        });
+
+        require(msg.value >= fee, "TriviaHost: insufficient fee");
+    }
+
+    function rewardFee(address player, uint64 onChainID) external view returns (uint256) {
+        uint256 reward_ = playerReward[player];
+        require(reward_ > 0, "TriviaHost: no reward");
+
+        return feeFor({
+            destChainId: onChainID,
+            data: abi.encodeCall(TriviaGuesser.sendReward, (player, reward_)),
+            gasLimit: GasLimits.SendReward
+        });
     }
 
     /**

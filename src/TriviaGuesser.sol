@@ -54,4 +54,11 @@ contract TriviaGuesser is XApp {
             gasLimit: GasLimits.SubmitAnswer
         });
     }
+
+    function sendReward(address player, uint256 reward) external xrecv {
+        require(isXCall(), "TriviaGuesser: only xcall");
+        require(xmsg.sourceChainId == omniChainId(), "TriviaGuesser: only omni");
+        require(xmsg.sender == host, "TriviaGuesser: only host");
+        require(token.transfer(player, reward), "TriviaGuesser: transfer failed");
+    }
 }

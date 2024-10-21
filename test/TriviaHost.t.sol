@@ -71,7 +71,7 @@ contract TriviaHost_Test is Test {
         });
 
         vm.prank(owner);
-        host.addQuestion("question", keccak256("answer"));
+        host.addQuestion("question", keccak256("answer"), 1);
 
         vm.prank(user1);
         assertEq(host.getPlayerQuestion(user1), "question");
@@ -100,13 +100,14 @@ contract TriviaHost_Test is Test {
 
         // assert progress
         assertEq(host.getPlayerProgress(user1), 1);
+        assertEq(host.getPlayerReward(user1), 1);
         assertEq(host.getLeaderboard()[0], user1);
         vm.expectRevert("TriviaHost: all questions answered");
         vm.prank(user1);
         host.getPlayerQuestion(user1);
 
         vm.prank(owner);
-        host.addQuestion("question2", keccak256("answer2"));
+        host.addQuestion("question2", keccak256("answer2"), 2);
 
         // user2 answers all questions
         portal.mockXCall({
@@ -126,7 +127,69 @@ contract TriviaHost_Test is Test {
 
         // user2 should also be on the leaderboard
         assertEq(host.getPlayerProgress(user2), 2);
+        assertEq(host.getPlayerReward(user2), 2);
         assertEq(host.getLeaderboard()[0], user1);
         assertEq(host.getLeaderboard()[1], user2);
+    }
+
+    /**
+     * @notice Test TriviaHost.getReward
+     */
+    function test_getReward() public {
+        address user = makeAddr("user");
+        uint256 reward = 1 ether;
+
+        vm.prank(owner);
+        host.registerGuesser(chainId1, guesser1);
+
+        // no reward
+        vm.expectRevert("TriviaHost: no reward");
+        vm.prank(user);
+        host.reward(chainId1);
+
+        // add question and reward user
+        vm.prank(owner);
+        host.addQuestion("question", keccak256("answer"), reward);
+        portal.mockXCall({
+            sourceChainId: chainId1,
+            sender: guesser1,
+            to: address(host),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user, Answer.encodeAnswer(user, "answer"))),
+            gasLimit: GasLimits.SubmitAnswer
+        });
+        assertEq(host.getPlayerReward(user), reward);
+
+        // requires fee
+        vm.expectRevert("XApp: insufficient funds");
+        vm.prank(user);
+        host.reward(chainId1);
+        assertEq(host.getPlayerReward(user), reward);
+
+        // charges fee to user
+        vm.deal(address(host), 1 ether);
+        vm.expectRevert("TriviaHost: insufficient fee");
+        vm.prank(user);
+        host.reward(chainId1);
+        assertEq(host.getPlayerReward(user), reward);
+
+        // get reward, expect xcall to guesser1
+        uint256 fee = host.rewardFee(user);
+        vm.expectCall(
+            address(portal),
+            abi.encodeCall(
+                MockPortal.xcall,
+                (
+                    chainId1,
+                    ConfLevel.Finalized,
+                    guesser1,
+                    abi.encodeCall(TriviaGuesser.sendReward, (user, reward)),
+                    GasLimits.SendReward
+                )
+            )
+        );
+        vm.prank(user);
+        vm.deal(user, fee);
+        host.reward{value: fee}(chainId1);
+        assertEq(host.getPlayerReward(user), 0);
     }
 }

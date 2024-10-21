@@ -5,10 +5,10 @@ import {TriviaHost} from "src/TriviaHost.sol";
 import {Script} from "forge-std/Script.sol";
 
 contract AddQuestion is Script {
-    function run(address host, string memory question, string memory answer) public {
+    function run(address host, string memory question, string memory answer, uint256 reward) public {
         vm.startBroadcast();
         bytes32 answerHash = keccak256(abi.encodePacked(answer));
-        TriviaHost(host).addQuestion(question, answerHash);
+        TriviaHost(host).addQuestion(question, answerHash, reward);
         vm.stopBroadcast();
     }
 }

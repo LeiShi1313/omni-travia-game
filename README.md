@@ -36,7 +36,7 @@ make mint-op-token
 make approve-op-token
 
 # Add as many questions as you want
-OWNER_PK=0x... QUESTION="Question 1" ANSWER="Answer 1" make add-question
+OWNER_PK=0x... QUESTION="Question 1" ANSWER="Answer 1" REWARD=1 make add-question
 
 # Player now can get the question
 make get-player-question
