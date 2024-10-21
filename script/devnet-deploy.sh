@@ -120,6 +120,7 @@ arb_guesser=$(deploy_guesser $arb_rpc $host $arb_token)
 register_guesser $omni_rpc $host $(cast chain-id --rpc-url $op_rpc) $op_guesser
 register_guesser $omni_rpc $host $(cast chain-id --rpc-url $arb_rpc) $arb_guesser
 
+echo "Portal: $portal"
 echo "Token(op): $op_token"
 echo "Token(arb): $arb_token"
 echo "Guesser(op): $op_guesser"
@@ -128,6 +129,7 @@ echo "Host(omni): $host"
 
 if test "$SHELL" = "/usr/bin/fish" -o "$SHELL" = "/bin/fish"; then
     echo "
+set -x PORTAL $portal
 set -x OP_TOKEN $op_token
 set -x ARB_TOKEN $arb_token
 set -x OP_GUESSER $op_guesser
@@ -145,6 +147,7 @@ set -x DEV_PK $dev_pk
 
 else
     echo "
+PORTAL=$portal
 OP_TOKEN=$op_token
 ARB_TOKEN=$arb_token
 OP_GUESSER=$op_guesser

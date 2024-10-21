@@ -52,12 +52,19 @@ get-player-progress:
 		--rpc-url $(OMNI_RPC) \
 		--private-key $(DEV_PK)
 
+get-answer-hash:
+	forge script GetAnswerHash \
+		--rpc-url $(OMNI_RPC) \
+		--private-key $(DEV_PK) \
+		--sig $$(cast calldata "run(string)" "$(ANSWER)")
+
 get-answer-fee:
-	cast call $(OP_GUESSER) "answerFee(string)(uint256)" $(ANSWER) \
-		--rpc-url $(OP_RPC)
+	cast call $(OP_GUESSER) "answerFee(bytes32)(uint256)" $(ANSWER_HASH) \
+		--rpc-url $(OP_RPC) \
+		--private-key $(DEV_PK)
 
 submit-player-answer:
-	cast send $(OP_GUESSER) "submitAnswer(string)" $(ANSWER) \
+	cast send $(OP_GUESSER) "submitAnswer(bytes32)" $(ANSWER_HASH) \
 		--rpc-url $(OP_RPC) \
 		--value $(FEE) \
 		--private-key $(DEV_PK)

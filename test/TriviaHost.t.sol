@@ -7,6 +7,7 @@ import {TestToken} from "./utils/TestToken.sol";
 import {MockPortal} from "omni/core/test/utils/MockPortal.sol";
 import {ConfLevel} from "omni/core/src/libraries/ConfLevel.sol";
 import {GasLimits} from "src/GasLimits.sol";
+import {Answer} from "src/utils/Answer.sol";
 import {Test} from "forge-std/Test.sol";
 
 /**
@@ -44,7 +45,7 @@ contract TriviaHost_Test is Test {
 
         // only xcall
         vm.expectRevert("TriviaHost: only xcall");
-        host.submitAnswer(user1, "answer");
+        host.submitAnswer(user1, Answer.encodeAnswer(user1, "answer"));
 
         // only supported chain
         vm.expectRevert("TriviaHost: unsupported chain");
@@ -52,7 +53,7 @@ contract TriviaHost_Test is Test {
             sourceChainId: chainId1, // not registered yet
             sender: address(1234),
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, "answer")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, Answer.encodeAnswer(user1, "answer"))),
             gasLimit: GasLimits.SubmitAnswer
         });
 
@@ -65,7 +66,7 @@ contract TriviaHost_Test is Test {
             sourceChainId: chainId1,
             sender: address(1234), // not guesser1
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, "answer")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, Answer.encodeAnswer(user1, "answer"))),
             gasLimit: GasLimits.SubmitAnswer
         });
 
@@ -80,7 +81,7 @@ contract TriviaHost_Test is Test {
             sourceChainId: chainId1,
             sender: guesser1,
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, "wrong answer")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, Answer.encodeAnswer(user1, "wrong answer"))),
             gasLimit: GasLimits.SubmitAnswer
         });
 
@@ -93,7 +94,7 @@ contract TriviaHost_Test is Test {
             sourceChainId: chainId1,
             sender: guesser1,
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, "answer")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user1, Answer.encodeAnswer(user1, "answer"))),
             gasLimit: GasLimits.SubmitAnswer
         });
 
@@ -112,14 +113,14 @@ contract TriviaHost_Test is Test {
             sourceChainId: chainId1,
             sender: guesser1,
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user2, "answer")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user2, Answer.encodeAnswer(user2, "answer"))),
             gasLimit: GasLimits.SubmitAnswer
         });
         portal.mockXCall({
             sourceChainId: chainId1,
             sender: guesser1,
             to: address(host),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (user2, "answer2")),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (user2, Answer.encodeAnswer(user2, "answer2"))),
             gasLimit: GasLimits.SubmitAnswer
         });
 

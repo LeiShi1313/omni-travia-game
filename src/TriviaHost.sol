@@ -6,6 +6,7 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {ConfLevel} from "omni/core/src/libraries/ConfLevel.sol";
 import {GasLimits} from "./GasLimits.sol";
+import {Answer} from "./utils/Answer.sol";
 import {TriviaGuesser} from "./TriviaGuesser.sol";
 
 /**
@@ -72,9 +73,9 @@ contract TriviaHost is XApp, Ownable {
      * @notice Record `amount` staked by `user` on `xmsg.sourceChainId`.
      *         Only callable via xcall by a known TriviaGuesser contract.
      * @param player   Account that answered.
-     * @param answer   Answer submitted.
+     * @param answerHash   Hash of the answer.
      */
-    function submitAnswer(address player, string memory answer) external xrecv {
+    function submitAnswer(address player, bytes32 answerHash) external xrecv {
         require(isXCall(), "TriviaHost: only xcall");
         require(triviaGusserOn[xmsg.sourceChainId] != address(0), "TriviaHost: unsupported chain");
         require(triviaGusserOn[xmsg.sourceChainId] == xmsg.sender, "TriviaHost: only guesser");
@@ -84,7 +85,7 @@ contract TriviaHost is XApp, Ownable {
 
 
         Question storage question = questions[playerQuestionId];
-        bool isCorrect = keccak256(abi.encodePacked(answer)) == question.answerHash;
+        bool isCorrect = Answer.verifyAnswer(player, question.answerHash, answerHash);
         if (isCorrect) {
             playerProgress[player]++;
             if (playerProgress[player] == 1) {

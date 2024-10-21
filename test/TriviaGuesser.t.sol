@@ -7,6 +7,7 @@ import {TestToken} from "./utils/TestToken.sol";
 import {MockPortal} from "omni/core/test/utils/MockPortal.sol";
 import {ConfLevel} from "omni/core/src/libraries/ConfLevel.sol";
 import {GasLimits} from "src/GasLimits.sol";
+import {Answer} from "src/utils/Answer.sol";
 import {Test} from "forge-std/Test.sol";
 
 /**
@@ -33,7 +34,8 @@ contract TriviaGuesser_Test is Test {
         address user = makeAddr("user");
         uint256 balance = 100 ether;
         string memory answer = "answer";
-        uint256 fee = guesser.answerFee(answer);
+        bytes32 answerHash = Answer.encodeAnswer(user, answer);
+        uint256 fee = guesser.answerFee(answerHash);
 
         // give user some tokens
         token.mint(user, balance);
@@ -45,13 +47,13 @@ contract TriviaGuesser_Test is Test {
         // requires fee
         vm.expectRevert("XApp: insufficient funds");
         vm.prank(user);
-        guesser.submitAnswer(answer);
+        guesser.submitAnswer(answerHash);
 
         // charges fee to user
         vm.deal(address(guesser), fee);
         vm.expectRevert("TriviaGuesser: insufficient fee");
         vm.prank(user);
-        guesser.submitAnswer(answer);
+        guesser.submitAnswer(answerHash);
 
         // expect xcall to host
         vm.expectCall(
@@ -62,13 +64,13 @@ contract TriviaGuesser_Test is Test {
                     portal.omniChainId(),
                     ConfLevel.Finalized,
                     address(host),
-                    abi.encodeCall(TriviaHost.submitAnswer, (user, answer)),
+                    abi.encodeCall(TriviaHost.submitAnswer, (user, answerHash)),
                     GasLimits.SubmitAnswer
                 )
             )
         );
         vm.prank(user);
         vm.deal(user, fee);
-        guesser.submitAnswer{value: fee}(answer);
+        guesser.submitAnswer{value: fee}(answerHash);
     }
 }

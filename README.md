@@ -41,8 +41,9 @@ OWNER_PK=0x... QUESTION="Question 1" ANSWER="Answer 1" make add-question
 # Player now can get the question
 make get-player-question
 # Submit an answer
-ANSWER="Answer 1" make get-answer-fee
-ANSWER="Answer 1" FEE=xxxx make submit-player-answer
+ANSWER="Answer 1" make get-answer-hash
+ANSWER_HASH=xxxx make get-answer-fee
+FEE=xxxx ANSWER_HASH=xxxx make submit-player-answer
 
 # Player can get the leaderboard or progress
 make get-leaderboard

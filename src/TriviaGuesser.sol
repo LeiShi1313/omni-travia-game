@@ -6,6 +6,7 @@ import {ConfLevel} from "omni/core/src/libraries/ConfLevel.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {GasLimits} from "./GasLimits.sol";
 import {TriviaHost} from "./TriviaHost.sol";
+import {Answer} from "./utils/Answer.sol";
 
 /**
  * @title TriviaGuesser
@@ -29,13 +30,13 @@ contract TriviaGuesser is XApp {
 
     /**
      * @notice Submit an answer.
-     * @param answer Answer to submit.
+     * @param answerHash The result of hash(address, hash(answer)).
      */
-    function submitAnswer(string memory answer) public payable {
+    function submitAnswer(bytes32 answerHash) public payable {
         uint256 fee = xcall({
             destChainId: omniChainId(),
             to: host,
-            data: abi.encodeCall(TriviaHost.submitAnswer, (msg.sender, answer)),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (msg.sender, answerHash)),
             gasLimit: GasLimits.SubmitAnswer
         });
 
@@ -46,10 +47,10 @@ contract TriviaGuesser is XApp {
     /**
      * @notice Returns the xcall fee for required to answer.
      */
-    function answerFee(string memory answer) public view returns (uint256) {
+    function answerFee(bytes32 answerHash) public view returns (uint256) {
         return feeFor({
             destChainId: omniChainId(),
-            data: abi.encodeCall(TriviaHost.submitAnswer, (msg.sender, answer)),
+            data: abi.encodeCall(TriviaHost.submitAnswer, (msg.sender, answerHash)),
             gasLimit: GasLimits.SubmitAnswer
         });
     }
