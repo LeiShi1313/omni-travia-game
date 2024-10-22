@@ -173,7 +173,7 @@ contract TriviaHost_Test is Test {
         assertEq(host.getPlayerReward(user), reward);
 
         // get reward, expect xcall to guesser1
-        uint256 fee = host.rewardFee(user);
+        uint256 fee = host.rewardFee(user, chainId1);
         vm.expectCall(
             address(portal),
             abi.encodeCall(
